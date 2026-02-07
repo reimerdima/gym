@@ -48,6 +48,8 @@ export default function NeuralBackground({
     class Particle {
       x: number
       y: number
+      prevX: number
+      prevY: number
       vx: number
       vy: number
       age: number
@@ -56,6 +58,8 @@ export default function NeuralBackground({
       constructor() {
         this.x = Math.random() * width
         this.y = Math.random() * height
+        this.prevX = this.x
+        this.prevY = this.y
         this.vx = 0
         this.vy = 0
         this.age = 0
@@ -78,6 +82,9 @@ export default function NeuralBackground({
       }
 
       update() {
+        this.prevX = this.x
+        this.prevY = this.y
+
         // Slow, gentle flow field
         const angle = (Math.cos(this.x * 0.003) + Math.sin(this.y * 0.003)) * Math.PI
 
@@ -163,6 +170,8 @@ export default function NeuralBackground({
           this.x = Math.random() * width
           this.y = Math.random() * height
         }
+        this.prevX = this.x
+        this.prevY = this.y
         this.vx = 0
         this.vy = 0
         this.age = 0
@@ -170,12 +179,19 @@ export default function NeuralBackground({
       }
 
       draw(context: CanvasRenderingContext2D) {
-        context.fillStyle = colorRef.current
         const alpha = 1 - Math.abs(this.age / this.life - 0.5) * 2
-        context.globalAlpha = alpha * 0.8
+        const spd = Math.sqrt(this.vx * this.vx + this.vy * this.vy)
+        // Scale line width based on speed for a more natural streak
+        const lineWidth = Math.min(1.5 + spd * 0.5, 3)
+
+        context.strokeStyle = colorRef.current
+        context.globalAlpha = alpha * 0.7
+        context.lineWidth = lineWidth
+        context.lineCap = "round"
         context.beginPath()
-        context.arc(this.x, this.y, 1.2, 0, Math.PI * 2)
-        context.fill()
+        context.moveTo(this.prevX, this.prevY)
+        context.lineTo(this.x, this.y)
+        context.stroke()
       }
     }
 
