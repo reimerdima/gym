@@ -1,7 +1,6 @@
 "use client"
 
 import React from "react"
-
 import { useState, useRef, useCallback } from "react"
 import useSWR from "swr"
 import Image from "next/image"
@@ -16,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Camera, Plus, Trash2, Loader2, X, ImageIcon } from "lucide-react"
+import { Camera, Plus, Trash2, Loader2, X, ImageIcon, Eye, EyeOff } from "lucide-react"
 
 interface ProgressPhotosProps {
   selectedDate: Date
@@ -38,6 +37,7 @@ export function ProgressPhotos({ selectedDate }: ProgressPhotosProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [viewingPhoto, setViewingPhoto] = useState<ProgressPhoto | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [isRevealed, setIsRevealed] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const dateStr = format(selectedDate, "yyyy-MM-dd")
@@ -65,7 +65,6 @@ export function ProgressPhotos({ selectedDate }: ProgressPhotosProps) {
           return
         }
 
-        // Target max dimension while maintaining aspect ratio
         const MAX_DIMENSION = 1920
         let { width, height } = img
         
@@ -81,8 +80,6 @@ export function ProgressPhotos({ selectedDate }: ProgressPhotosProps) {
 
         canvas.width = width
         canvas.height = height
-
-        // Draw and compress
         ctx.drawImage(img, 0, 0, width, height)
         
         canvas.toBlob(
@@ -94,7 +91,7 @@ export function ProgressPhotos({ selectedDate }: ProgressPhotosProps) {
             }
           },
           "image/jpeg",
-          0.85 // Quality: 85%
+          0.85
         )
       }
 
@@ -110,7 +107,6 @@ export function ProgressPhotos({ selectedDate }: ProgressPhotosProps) {
     setIsUploading(true)
 
     try {
-      // Compress image before upload
       const compressedBlob = await compressImage(file)
       const compressedFile = new File([compressedBlob], file.name, {
         type: "image/jpeg",
@@ -176,22 +172,39 @@ export function ProgressPhotos({ selectedDate }: ProgressPhotosProps) {
             <Camera className="h-4 w-4 text-primary" />
             Progress Photos
           </CardTitle>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3"
-          >
-            {isUploading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <>
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                Add
-              </>
+          <div className="flex items-center gap-1">
+            {photos.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsRevealed(!isRevealed)}
+                className="h-7 sm:h-8 w-7 sm:w-8 p-0"
+                aria-label={isRevealed ? "Hide photos" : "Show photos"}
+              >
+                {isRevealed ? (
+                  <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+              </Button>
             )}
-          </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 bg-transparent"
+            >
+              {isUploading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <>
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  Add
+                </>
+              )}
+            </Button>
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -217,35 +230,53 @@ export function ProgressPhotos({ selectedDate }: ProgressPhotosProps) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-            {photos.map((photo) => (
+          <div className="relative">
+            <div className={`grid grid-cols-3 gap-1.5 sm:gap-2 transition-all duration-300 ${!isRevealed ? "blur-xl" : ""}`}>
+              {photos.map((photo) => (
+                <button
+                  key={photo.id}
+                  type="button"
+                  onClick={() => { if (isRevealed) setViewingPhoto(photo) }}
+                  className="relative aspect-square rounded-md overflow-hidden bg-muted hover:ring-2 hover:ring-primary transition-all"
+                  disabled={!isRevealed}
+                >
+                  <Image
+                    src={photo.blob_url || "/placeholder.svg"}
+                    alt={`Progress photo from ${photo.photo_date}`}
+                    fill
+                    sizes="(max-width: 640px) 33vw, 120px"
+                    className="object-cover"
+                  />
+                </button>
+              ))}
               <button
-                key={photo.id}
                 type="button"
-                onClick={() => setViewingPhoto(photo)}
-                className="relative aspect-square rounded-md overflow-hidden bg-muted hover:ring-2 hover:ring-primary transition-all"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="aspect-square rounded-md border-2 border-dashed border-border/50 flex items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-colors"
               >
-                <Image
-                  src={photo.blob_url || "/placeholder.svg"}
-                  alt={`Progress photo from ${photo.photo_date}`}
-                  fill
-                  sizes="(max-width: 640px) 33vw, 120px"
-                  className="object-cover"
-                />
+                {isUploading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <Plus className="h-5 w-5 text-muted-foreground" />
+                )}
               </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="aspect-square rounded-md border-2 border-dashed border-border/50 flex items-center justify-center hover:border-primary/50 hover:bg-primary/5 transition-colors"
-            >
-              {isUploading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              ) : (
-                <Plus className="h-5 w-5 text-muted-foreground" />
-              )}
-            </button>
+            </div>
+
+            {/* Blur overlay with reveal button */}
+            {!isRevealed && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setIsRevealed(true)}
+                  className="gap-1.5 shadow-lg"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  Tap to reveal
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

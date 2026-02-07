@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dumbbell, LogOut, Plus, TrendingUp } from "lucide-react"
+import { Dumbbell, LogOut, Plus, TrendingUp, ImageIcon } from "lucide-react"
 import Link from "next/link"
 import { DailyNotes } from "@/components/daily-notes"
 import { MacroTracker } from "@/components/macro-tracker"
@@ -108,6 +108,12 @@ export function GymJournal() {
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
             <ThemeSettings />
+            <Link href="/album">
+              <Button variant="outline" size="sm" className="px-2 sm:px-3 bg-transparent">
+                <ImageIcon className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Album</span>
+              </Button>
+            </Link>
             <Link href="/progress">
               <Button variant="outline" size="sm" className="px-2 sm:px-3 bg-transparent">
                 <TrendingUp className="h-4 w-4 sm:mr-2" />

@@ -44,6 +44,7 @@ export function MacroTracker({ selectedDate }: MacroTrackerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [formEntries, setFormEntries] = useState<FoodFormEntry[]>([{ ...emptyEntry }])
   const [isSaving, setIsSaving] = useState(false)
+  const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false)
 
   const supabase = createClient()
   const dateString = format(selectedDate, "yyyy-MM-dd")
@@ -226,12 +227,15 @@ export function MacroTracker({ selectedDate }: MacroTrackerProps) {
                 {entries.map((entry) => (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between p-2 rounded-md bg-muted/30 text-xs sm:text-sm"
+                    className="flex flex-col gap-1 p-2 rounded-md bg-muted/30 text-xs sm:text-sm"
                   >
-                    <span className="font-medium truncate flex-1 mr-2">{entry.food_name}</span>
-                    <span className="text-muted-foreground shrink-0">
-                      {entry.calories} cal
-                    </span>
+                    <span className="font-medium truncate">{entry.food_name}</span>
+                    <div className="flex items-center gap-3 text-[10px] sm:text-xs text-muted-foreground">
+                      <span className="text-orange-500">{entry.calories} cal</span>
+                      <span className="text-red-500">{Number(entry.protein).toFixed(0)}g P</span>
+                      <span className="text-amber-500">{Number(entry.carbs).toFixed(0)}g C</span>
+                      <span className="text-blue-500">{Number(entry.fat).toFixed(0)}g F</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -341,16 +345,42 @@ export function MacroTracker({ selectedDate }: MacroTrackerProps) {
             </Button>
 
             {entries.length > 0 && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleDeleteAll}
-                disabled={isSaving}
-                className="w-full h-9 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete All Food Entries
-              </Button>
+              !confirmingDeleteAll ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setConfirmingDeleteAll(true)}
+                  disabled={isSaving}
+                  className="w-full h-9 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete All Food Entries
+                </Button>
+              ) : (
+                <div className="flex flex-col gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                  <p className="text-xs sm:text-sm text-center text-destructive font-medium">
+                    Are you sure you want to delete all food entries?
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setConfirmingDeleteAll(false)}
+                      className="flex-1 h-9 text-sm bg-transparent"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => { setConfirmingDeleteAll(false); handleDeleteAll(); }}
+                      className="flex-1 h-9 text-sm"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              )
             )}
           </div>
         </DialogContent>

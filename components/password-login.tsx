@@ -12,21 +12,32 @@ import NeuralBackground from "@/components/ui/flow-field-background"
 const MODE_STORAGE_KEY = "gym_journal_theme_mode"
 const ACCENT_STORAGE_KEY = "gym_journal_accent_color"
 
+const ACCENT_COLOR_MAP: Record<string, string> = {
+  red: "#ef4444",
+  orange: "#f97316",
+  pink: "#ec4899",
+  green: "#22c55e",
+  blue: "#3b82f6",
+  yellow: "#eab308",
+}
+
 export function PasswordLogin() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [particleColor, setParticleColor] = useState("#3b82f6")
   const { login } = useAuth()
 
-  // Apply saved theme on mount
   useEffect(() => {
     const savedMode = localStorage.getItem(MODE_STORAGE_KEY) || "dark"
-    const savedAccent = localStorage.getItem(ACCENT_STORAGE_KEY) || "red"
+    const savedAccent = localStorage.getItem(ACCENT_STORAGE_KEY) || "blue"
     
     document.documentElement.classList.remove("light", "dark")
     document.documentElement.classList.add(savedMode)
     document.documentElement.setAttribute("data-accent", savedAccent)
+    
+    setParticleColor(ACCENT_COLOR_MAP[savedAccent] || "#3b82f6")
     setMounted(true)
   }, [])
 
@@ -35,7 +46,6 @@ export function PasswordLogin() {
     setIsLoading(true)
     setError("")
 
-    // Small delay for UX
     await new Promise((resolve) => setTimeout(resolve, 300))
 
     const success = login(password)
@@ -56,17 +66,17 @@ export function PasswordLogin() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Flow Field Background */}
       <div className="absolute inset-0 z-0">
         <NeuralBackground
-          color="#ffffff"
-          particleCount={400}
-          speed={0.5}
-          trailOpacity={0.08}
+          color={particleColor}
+          particleCount={350}
+          speed={0.15}
+          trailOpacity={0.06}
+          avoidCenter={true}
+          avoidCenterRadius={220}
         />
       </div>
       
-      {/* Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-border/50 bg-background/80 backdrop-blur-sm">
           <CardHeader className="text-center">

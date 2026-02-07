@@ -66,6 +66,7 @@ export function ExerciseForm({ date, existingExercises, onSave, onDeleteAll }: E
   const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState<number | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -505,15 +506,41 @@ export function ExerciseForm({ date, existingExercises, onSave, onDeleteAll }: E
       </Button>
 
       {existingExercises.length > 0 && onDeleteAll && (
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onDeleteAll}
-          className="w-full h-9 sm:h-10 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete Entire Workout
-        </Button>
+        !confirmingDelete ? (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setConfirmingDelete(true)}
+            className="w-full h-9 sm:h-10 text-sm text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Entire Workout
+          </Button>
+        ) : (
+          <div className="flex flex-col gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+            <p className="text-xs sm:text-sm text-center text-destructive font-medium">
+              Are you sure you want to delete this entire workout?
+            </p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmingDelete(false)}
+                className="flex-1 h-9 text-sm bg-transparent"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => { setConfirmingDelete(false); onDeleteAll(); }}
+                className="flex-1 h-9 text-sm"
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        )
       )}
     </div>
   )
